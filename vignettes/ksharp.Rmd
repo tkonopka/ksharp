@@ -1,0 +1,357 @@
+---
+title: "Cluster sharpening using `ksharp`"
+output:
+  html_document:
+    toc: true
+    fig_width: 7.2
+    fig_height: 5.4
+    fig_retina: 2
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{ksharp vignette}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+#TOC { margin-top: 1em; }
+h1.title { margin-bottom: 1em; }
+h1 { margin-top: 1.6em; }
+h2, h3 { margin-top: 1.2em; }
+body { font-size: 14pt; }
+img { margin-top: 0.8em; margin-bottom: 0.8em; }
+</style>
+
+
+```{r, echo=FALSE}
+library(Rcssplot)
+library(cluster)
+library(dbscan)
+library(ksharp)
+set.seed(300299)
+```
+
+```{r, echo=FALSE}
+RcssDefaultStyle <- Rcss("ksharp.Rcss")
+RcssOverload()
+```
+
+```{r, echo=FALSE}
+dbscan.named = function(data, eps) {
+  result = dbscan(data, eps=eps)
+  names(result$cluster) = rownames(data)
+  result$data = data
+  result
+}
+```
+
+
+```{r, echo=FALSE}
+plotClusters <- function(data, clusters=NULL, main="", Rcssclass="sharp") {
+
+  ## when clusters not specified, assume all belong to class "plain"
+  if (is.null(clusters)) {
+    clusters = setNames(rep("plain", nrow(data)), rownames(data))
+  }
+  if (is.null(names(clusters))) {
+    names(clusters) = rownames(data)
+  }
+
+  RcssCompulsoryClass = RcssGetCompulsoryClass(Rcssclass)
+
+  titlepos = RcssValue("ksharp", "title.pos", default=c(0, 1))
+  padding = RcssValue("ksharp", "padding", default=0.1)
+
+  xlim = range(data[,1])
+  ylim = range(data[,2])
+  if (xlim[2]-xlim[1] > ylim[2]-ylim[1]) {
+    ylim = xlim
+  } else {
+    xlim = ylim
+  }
+  xysize = xlim[2]-xlim[1]
+  xylim = xlim+(c(-1,1)*xysize*padding)
+  xysize = xylim[2]-xylim[1]
+  rm(xlim, ylim)	
+
+  plot(xylim, xylim)
+  rect(xylim[1], xylim[1], xylim[2], xylim[2])
+  
+  ## create cluster names like C0, C1, etc
+  cnames = paste0("C", clusters)
+  clusters = split(names(clusters), cnames)
+
+  ## add points to the chart
+  for (iname in names(clusters)) {
+    idata = data[clusters[[iname]], , drop=FALSE]
+    points(idata[,1], idata[,2], Rcssclass=iname)
+  }
+
+  text(xylim[1] + titlepos[1]*xysize,
+       xylim[1] + titlepos[2]*xysize,
+       main, Rcssclass="main")
+}
+emptyplot = function(n) {
+  for (i in 1:n) {
+    plot(c(0, 1), c(0, 1), type="n")
+  }
+}
+```
+
+```{r, echo=FALSE}
+## override table to remove spurious empty line
+table = function(x) {
+  x = base::table(x)
+  width = 5
+  padspaces = function(y) {
+    if (length(y)>1) {
+      return(sapply(y, padspaces))
+    }
+    y = as.character(y)
+    paste(c(rep(" ", width-nchar(y)), y), collapse="")
+  }
+
+  line1 = paste(sapply(names(x), padspaces), collapse="")
+  line2 = paste(sapply(x, padspaces), collapse="")
+  cat(line1, "\n")
+  cat(line2, "\n")
+}
+```
+
+
+&nbsp;
+
+Clustering is a common technique in data exploration. Data points are assigned to groups (clusters) so that each group is internally coherent and also different from the others. In practice, the resulting groups often turn out to be almost merging with one another. One might then wish for the groups to exhibit sharper contrast. This leads to the concept of cluster sharpening, a concept that goes back at least to the 1980s (Tukey) and refers to adjusting an existing clustering to emphasize the unique properties of each group. 
+
+This vignette first explains cluster sharpening further in the introduction. It then outlines some possible algorithms. These options are explored in a section with examples. 
+
+
+
+
+# Introduction with example
+
+Consider the toy dataset below. (Here and throughout the vignette, most code is hidden. Core commands are explained below; the rest are available in the [package source](https://github.com/tkonopka/ksharp).) 
+
+```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
+K1 = kdata.1
+km1 = kmeans(K1, 2)
+par(mfrow=c(1,4))
+plotClusters(K1, main="raw data", Rcssclass="unsharp")
+plotClusters(K1, km1$cluster, main="kmeans (k=2)", Rcssclass="unsharp")
+emptyplot(2)
+```
+
+The dataset consists of two blobs (above, left). A k-means clustering using two colors partitions the points rather well (above, right). However, there are elements of this result that are unsettling. 
+
+The boundary between the two groups is vertical and appears to be well-defined. This does not seem right when the clusters seem to be circular (symmetrical). The straight line is the best partition between the overlapping groups, but the ambiguity in cluster assignment is not apparent in the end result, and it is reasonable to guess that each group may be contaminated by points from the other cluster.
+
+Let's identify and mark the ambiguous points using cluster sharpening. The figure below shows the result using an increasing sharpness threshold.
+
+```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
+sharp1 = ksharp(km1, data=K1)
+par(mfrow=c(1,4))
+thresholds = c(0.05, 0.1, 0.2, 0.4)
+for (t in thresholds) {
+  plotClusters(K1, ksharp(sharp1, t, method="sil")$cluster, main=paste0("k=2, threshold=", t))
+}
+```
+
+With a mild level of sharpening (we will look at the details in a moment), a few of the points on the boundary fade into a third group - let's call it noise - displayed in gray. Increasing the degree of sharpening makes the noise group grow. At the cost of diminished cluster size, the leftover groups become more distinct and well-separated. 
+
+We can achieve this effect using the `ksharp` package as follows. To begin, we can cluster the dataset `kdata.1` using k-means.
+
+```{r}
+km1 = kmeans(kdata.1, 2)
+table(km1$cluster)
+```
+
+As we saw above, the algorithm partitions the data points into groups of roughly equal size. Sharpening is performed using the `ksharp` command.
+
+```{r}
+ks1 = ksharp(km1, threshold=0.05, data=kdata.1)
+table(ks1$cluster)
+```
+
+The sharpening command takes an initial clustering as input. On the first run, the command requires access to the original data. With the threshold shown (5\%), the sharpening creates an additional small group with cluster index `0`. We can now adjust the size of the noise group by varying the sharpness threshold. 
+
+```{r}
+ks1.10 = ksharp(ks1, threshold=0.1)
+table(ks1.10$cluster)
+ks1.20 = ksharp(ks1, threshold=0.2)
+table(ks1.20$cluster)
+```
+
+When applying `ksharp` on an already-sharpened object, specifying the data is no longer required and the calculations are much quicker. By increasing the threshold, we get a larger proportion of the points entering into the noise group with index `0`, reproducing the effect in the figure.
+
+
+
+
+# Methods
+
+Just like there are many ways to define a clustering algorithm, there are also many concievable procedures to mask out ambiguous points in a clustering. Package `ksharp` implements three.
+
+ - `method="silhouette"` is based on silhouette widths, defined for each data point as the ratio of two distances. In the numerator, there is average distance to all other points in its cluster. The denominator is the average distance to all points in the nearest adjacent cluster. Sharpening can be achieved through a simple threshold on the silhouette width.
+
+ - `method="medoids"` is based on a ratio of distances to cluster centers. This is similar to the method using silhouette widths, but requires computation only of the distances between each data point to representatives of each cluster. Sharpening can be achieved through a threshold on the required distance ratio.
+
+ - `method="neighbors"` is based on local neighborhoods. A neighborhood of size `n` is defined for each point as the set of `n` of its nearest neighbors. A sharp neighborhood is one where all the neighbors belong to the same cluster. Sharpening can be achieved through a threshold on the size of the neighborhood.
+
+Let's now investigate how these methods differ in a range of situations. 
+
+
+
+
+# Examples
+
+## Two overlapping clusters
+
+Before moving to more sophisticated examples, let's revisit the dataset with the two overlapping groups.
+
+```{r, echo=FALSE}
+par(mfrow=c(3,4))
+methods = c("silhouette", "medoid", "neighbor")
+for (m in methods) {
+  for (t in thresholds) {
+    plotClusters(K1, ksharp(sharp1, t, method=m)$cluster, main=paste0(m, ", ", t))
+  }
+}
+```
+
+Each row represents output from one sharpening method. In each case, increasing the threshold masks out more of the data points. Although the results differ slightly across methods, the changes appear to be minor in this case.
+
+
+
+
+## Non-overlapping, non-spherical clusters
+
+Let's now consider another dataset with two point groups, `kdata.2`.
+
+```{r, echo=FALSE}
+K2 = kdata.2
+K2dist = dist(K2)
+km2 = kmeans(K2, 2)
+db2 = dbscan.named(K2, 0.3)
+sharp2 = ksharp(db2, method="neighbor")
+```
+
+```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
+par(mfrow=c(1,4))
+plotClusters(K2, cluster=NULL, main="raw", Rcssclass="unsharp")
+plotClusters(K2, km2$cluster, main="kmeans, k=2", Rcssclass="unsharp")
+plotClusters(K2, db2$cluster, main="dbscan, k=2", Rcssclass="unsharp")
+emptyplot(1)
+```
+
+Raw data points are here arranged in non-circular shapes (above, left) and this can confuse the k-means algorithm (above, center). Thus, let's now use a clustering based on a density-based algorithm instead, `dbscan` (above, right).
+
+Sharpening of a `dbscan` clustering proceeds in the same way as before. (A caveat is that `dbscan` provides cluster assignments in un-named lists. `ksharp` requires a named list, so the initial clustering must be updated manually before sharpening.)
+
+```{r, echo=FALSE}
+par(mfrow=c(3,4))
+for (m in methods) {
+  for (t in thresholds) {
+    plotClusters(K2, ksharp(sharp2, t, method=m)$cluster, main=paste0(m, ", ", t))
+  }
+}
+```
+
+Here, the first two methods (top, middle) tend to remove points from the rectangles from the sides. The neighbor-based method (bottom) instead subtracts from the upper and lower sides. 
+
+
+
+
+## Non-convex groups
+
+Differences between sharpening methods can also be observed when data points form groups with non-convex shapes. As an example, let's use dataset `kdata.3` with a clustering by `dbscan`.
+
+```{r, echo=FALSE, fig.height=1.8}
+K3 = kdata.3
+db3 = dbscan.named(K3, 0.25)
+par(mfrow=c(1,4))
+plotClusters(K3, cluster=NULL, main="raw", Rcssclass="unsharp")
+plotClusters(K3, db3$cluster, main="dbscan", Rcssclass="unsharp")
+emptyplot(2)
+```
+
+The result from `dbscan` contains three main groups. It also already assigns some points to a noise group. But we can sharpen the data further.
+
+```{r, echo=FALSE}
+sharp3 = ksharp(db3, data=K3, method="neighbor")
+par(mfrow=c(3,4))
+for (m in methods) {
+  for (t in thresholds) {
+    plotClusters(K3, ksharp(sharp3, t, method=m)$cluster, main=paste0(m, ", ", t))
+  }
+}
+```
+
+An interesting feature that appears here is that the presence of a noise group in the original clustering also removes points in the real clusters that might overlap with the noise.
+
+
+
+
+## Noise points
+
+The last example consists of groups that are well defined, but are surrounded by true noise points, `kdata.4`.
+
+```{r, echo=FALSE}
+K4 = kdata.4
+K4.centers = matrix(c(-3,-3,-3,3,3,-3,3,3), ncol=2, byrow=T)
+km4 = kmeans(K4, K4.centers)
+sharp4 = ksharp(km4, data=K4)
+```
+
+```{r, echo=FALSE}
+par(mfrow=c(3,4))
+thresholds2 = c(0.05, 0.1, 0.2, 0.4)
+for (m in methods) {
+  for (t in thresholds2) {
+    plotClusters(K4, ksharp(sharp4, t, method=m)$cluster, main=paste0(m, ", ", t))
+  }
+}
+```
+
+Here, the initial clustering is generated by k-means with a manual group seeding. As k-means partitions all points to the specified number of clusters, the surrounding noise points are assigned to groups along the four dense regions near the center. Sharpening can then be used to remove some of the noise points.
+
+Interestingly, an already-sharp cluster assignment can be produced in this case by `dbscan`, which can produce a noise group in its raw output. The above result thus reproduces a similar effect using a different algorithm. 
+
+
+
+
+# Discussion
+
+Sharpening is a procedure adjusting an existing clustering in order to better bring out the distinctions between cluster groups. Package `ksharp` implements a specific form of cluster sharpening called 'sharpening by excision' (Cleveland, 1988). In this form of sharpening, selected points are removed from a dataset in order to increase contrast between the remaining groups.
+
+There are several possible algorithms for cluster sharpening. The `ksharp` command delivers three different ones. The object output by function `ksharp` contains details relevant to all of them. This makes it possible to adjust the sharpening level on already-sharpened clusterings very quickly (in time O(N), where N is the number of data points). However, the initial creation of these details requires recalculation and sorting of the distance matrix and can thus be expensive on large datasets). 
+
+Other algorithms for sharpening by excision have been described in the literature. In particular, algorithms can be defined on dendrograms (eg. Stanberry, Nandy, Cordes). 
+
+
+
+
+# References
+
+Cleveland, William S.. "The Collected Works of John W. Tukey: Graphics 1965-1985, Volume 5." CRC Press, 1988.
+
+Stanberry, Larissa, Rajesh Nandy, and Dietmar Cordes. "Cluster analysis of fMRI data using dendrogram sharpening." Human brain mapping 20.4 (2003): 201-219.
+
+
+# Appendix
+
+## API & Implementation
+
+The package exports `ksharp` as the main function to perform sharpening. This function is designed to be immediately compatible with clusterings produced by kmeans and by functions from the `cluster` package, e.g. `pam`. It is also compatible with output from `dbscan` after an adjustment of that clustering output to include data-point names.
+
+The function can also sharpen self-made clusterings, as long as they are prepared as a list with a component `cluster` consisting of a named vector associating each data point to a numeric cluster id.
+
+Besides the main sharpening function, the package also exports some helper functions to compute auxiliary information such as silhouette widths. These implementations differ slightly from existing ones from package `cluster`; see the documentation, e.g. `help(silinfo)` for details.
+
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+
+
+

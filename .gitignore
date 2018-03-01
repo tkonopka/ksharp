@@ -1,0 +1,11 @@
+## ignoring temporary files from emacs/knitr/tex
+*~
+
+## ignoring intermediate vignette data
+vignettes/figure/
+
+## ignoring figures and vignette outputs
+*pdf
+*png
+*html
+

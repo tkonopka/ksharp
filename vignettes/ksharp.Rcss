@@ -1,0 +1,71 @@
+/**
+ plot styles of ksharp package vignette
+**/
+
+
+par {
+ mar: 0.2 0.85 1.5 0.85;
+}
+
+plot {
+  axes: FALSE;
+  frame: FALSE;
+  xlab: ;
+  ylab: ;
+  type: n;
+  xaxs: i;
+  yaxs: i;
+}
+
+points, rect, text {
+  xpd: 1;
+}
+rect.unsharp {
+  lwd: 0.25;
+  border: #f0f0f0;
+}
+rect.sharp {
+  lwd: 0.2;
+  border: #222222;
+}
+
+
+ksharp {
+  /** position of title relative to xlim, ylim **/
+  title.pos: 0.03 1.03;
+  /** padding for xlim and ylim **/
+  padding: 0.05;
+}
+
+
+points {
+  cex: 0.75;
+  pch: 19;
+}
+points.Cplain {
+  col: #222222;
+  pch: 4;
+  cex: 0.75;
+}
+points.C0 {
+  col: #ddd8d8;
+}
+points.C1 {
+  col: #dd0000;
+}
+points.C2 {
+  col: #0000dd;
+}
+points.C3 {
+  col: #009900;
+}
+points.C4 {
+  col: #0099ff;
+}
+
+text.main {
+  cex: 1.6;
+  adj: 0 0;
+  col: #222222;
+}
+

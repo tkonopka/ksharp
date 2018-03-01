@@ -1,0 +1,23 @@
+Package: ksharp
+Title: Cluster Sharpening
+Version: 0.1.0
+Authors@R: person("Tomasz", "Konopka", email = "t.konopk@qmul.ac.uk", role = c("aut", "cre"))
+Author: Tomasz Konopka [aut, cre]
+Maintainer: Tomasz Konopka <t.konopka@qmul.ac.uk>
+Description: Clustering assigns data points into clusters, but the resulting groups may be almost indistinct. Cluster sharpening adjusts an existing clustering to create contrast between groups.
+Depends:
+    R (>= 3.1.2)
+Imports:
+    stats,
+    utils
+License: MIT + file LICENSE
+LazyData: true
+Suggests:
+    cluster,
+    dbscan,
+    knitr,
+    Rcssplot (>= 0.3.0),
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
