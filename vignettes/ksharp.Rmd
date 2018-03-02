@@ -131,7 +131,7 @@ This vignette first explains cluster sharpening in the introduction. It then out
 
 Consider the toy dataset below. (Here and throughout the vignette, most code is hidden for readability. Core commands are explained below; the rest are available in the [package source](https://github.com/tkonopka/ksharp).) 
 
-```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
+```{r, echo=FALSE}
 K1 = kdata.1
 km1 = kmeans(K1, 2)
 ```
