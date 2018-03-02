@@ -1,8 +1,11 @@
 ## ignoring temporary files from emacs/knitr/tex
 *~
 
-## ignoring intermediate vignette data
-vignettes/figure/
+## ignoring intermediate/cached vignette data
+vignettes/figure
+vignettes/ksharp_cache
+vignettes/ksharp_files
+
 
 ## ignoring figures and vignette outputs
 *pdf
