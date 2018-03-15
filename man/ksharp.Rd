@@ -5,7 +5,7 @@
 \title{sharpen a clustering}
 \usage{
 ksharp(x, threshold = 0.1, data = NULL, method = c("silhouette",
-  "neighbor", "medoid"))
+  "neighbor", "medoid"), threshold.abs = NULL)
 }
 \arguments{
 \item{x}{clustering object; several types of inputs are acceptable, including
@@ -17,6 +17,9 @@ objects of class kmeans, pam, and self-made lists with a component "cluster".}
 when sharpening for the first time or if data is not present within x.}
 
 \item{method}{character, determines method used for sharpening}
+
+\item{threshold.abs}{numeric; absolute-value of threshold for sharpening.
+When non-NULL, this value overrides value in argument 'threshold'}
 }
 \description{
 Each data point in a clustering is assigned to a cluster, but some data points

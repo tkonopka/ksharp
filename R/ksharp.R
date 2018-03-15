@@ -22,10 +22,13 @@
 ##' @param data matrix, raw data corresponding to clustering x; must be present
 ##' when sharpening for the first time or if data is not present within x.
 ##' @param method character, determines method used for sharpening
+##' @param threshold.abs numeric; absolute-value of threshold for sharpening.
+##' When non-NULL, this value overrides value in argument 'threshold'
 ##'
 ##' @export
 ksharp = function(x, threshold=0.1, data=NULL,
-                   method=c("silhouette", "neighbor", "medoid")) {
+                  method=c("silhouette", "neighbor", "medoid"),
+                  threshold.abs=NULL) {
   
   method = match.arg(method)
   threshold = check.numeric(threshold)
@@ -48,7 +51,10 @@ ksharp = function(x, threshold=0.1, data=NULL,
 
   ## retrieve ids of noise points from an "info" object
   noise.ids = function(widths) {
-    noise = widths[,3] < stats::quantile(widths[,3], p=threshold)
+    if (is.null(threshold.abs)) {
+      threshold.abs = stats::quantile(widths[,3], p=threshold)
+    }
+    noise = widths[,3] < threshold.abs
     rownames(widths)[noise]
   }
   

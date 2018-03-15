@@ -1,6 +1,5 @@
 ## tests for ksharp silinfo.R, neiinfo.R
 
-cat("\ntest_info ")
 
 library(cluster)
 

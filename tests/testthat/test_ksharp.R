@@ -1,6 +1,5 @@
 ## tests for ksharp calculation
 
-cat("\ntest_ksharp ")
 
 ## small dataset for testing
 K1select = c(1:30, 401:430)
@@ -116,8 +115,10 @@ test_that("recompute silhouettes if needed", {
 })
 
 
+
+
 ###############################################################################
-## testing using different methods
+## using different methods
 
 
 test_that("change clustering, method=silhouette", {
@@ -151,8 +152,35 @@ test_that("change clustering, method=neighbor", {
 
 
 
+
 ###############################################################################
-## testing using pam input
+## using relateive and absolute-value thresholds
+
+
+test_that("absolute value thresholding", {
+  sharp2rel = ksharp(kp2, threshold=0.3, data=K1, method="neighbor")
+  sharp2abs = ksharp(kp2, threshold=0.3, data=K1, method="silhouette", threshold.abs=0.6)
+  ## for this dataset, a silhouette value of 0.6 is high and should result
+  ## in more that 30% of points in noise group
+  noise.rel = sum(sharp2rel$cluster==0)
+  noise.abs = sum(sharp2abs$cluster==0)
+  expect_gt(noise.abs, noise.rel)
+})
+
+
+test_that("absolute value thresholding ignores relative threshold", {
+  abs1 = ksharp(kp2, threshold=0.1, data=K1, method="neighbor", threshold.abs=0.4)
+  abs2 = ksharp(kp2, threshold=0.5, data=K1, method="neighbor", threshold.abs=0.4)
+  abs3 = ksharp(kp2, threshold=0.9, data=K1, method="neighbor", threshold.abs=0.4)
+  expect_equal(abs1$cluster, abs2$cluster)
+  expect_equal(abs1$cluster, abs3$cluster)
+})
+
+
+
+
+###############################################################################
+## using pam input
 
 
 test_that("change pam cluster values", {
@@ -174,7 +202,7 @@ test_that("sharpening on pam input requires no data", {
 
 
 ###############################################################################
-## testing using self-made lists
+## using self-made lists
 
 
 test_that("change self-made cluster values", {
