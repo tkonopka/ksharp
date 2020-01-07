@@ -1,0 +1,19 @@
+## Files to ignore when building package
+
+## For github checks
+.travis.yml
+.gitignore
+.git
+
+^README
+^LICENSE.md
+
+
+## Temporary files
+^R/.+~$
+^vignettes/.+~$
+^vignettes/cache
+^vignettes/.*cache
+^vignettes/.*html$
+^vignettes/.*png$
+

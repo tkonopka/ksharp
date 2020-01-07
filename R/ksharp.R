@@ -4,6 +4,12 @@
 ##
 
 
+# package imports
+#' @import utils
+#' @import stats
+NULL
+
+
 
 
 ##' sharpen a clustering

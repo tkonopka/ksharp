@@ -4,8 +4,13 @@
 \alias{ksharp}
 \title{sharpen a clustering}
 \usage{
-ksharp(x, threshold = 0.1, data = NULL, method = c("silhouette",
-  "neighbor", "medoid"), threshold.abs = NULL)
+ksharp(
+  x,
+  threshold = 0.1,
+  data = NULL,
+  method = c("silhouette", "neighbor", "medoid"),
+  threshold.abs = NULL
+)
 }
 \arguments{
 \item{x}{clustering object; several types of inputs are acceptable, including
