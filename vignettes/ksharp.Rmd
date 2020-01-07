@@ -23,17 +23,14 @@ img { margin-top: 0.8em; margin-bottom: 0.8em; }
 
 
 ```{r, echo=FALSE}
-library(Rcssplot)
+suppressMessages(library(Rcssplot))
 library(cluster)
 library(dbscan)
 library(ksharp)
 set.seed(300299)
+RcssDefaultStyle <- Rcss("ksharp.Rcss")
 ```
 
-```{r, echo=FALSE}
-RcssDefaultStyle <- Rcss("ksharp.Rcss")
-RcssOverload()
-```
 
 ```{r, echo=FALSE}
 dbscan.named = function(data, eps) {

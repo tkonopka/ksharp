@@ -16,7 +16,7 @@ Suggests:
     cluster,
     dbscan,
     knitr,
-    Rcssplot (>= 0.3.0),
+    Rcssplot (>= 1.0.0),
     rmarkdown,
     testthat
 VignetteBuilder: knitr
