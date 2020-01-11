@@ -3,12 +3,12 @@
 \docType{data}
 \name{kdata.1}
 \alias{kdata.1}
-\title{Toy dataset with two convex groups with partial overlap.}
+\title{Toy dataset with two convex groups with partial overlap}
 \format{matrix with two columns: \code{D1}, \code{D2}}
 \usage{
 data(kdata.1)
 }
 \description{
-Toy dataset with two convex groups with partial overlap.
+Toy dataset with two convex groups with partial overlap
 }
 \keyword{datasets}

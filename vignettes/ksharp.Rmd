@@ -6,6 +6,8 @@ output:
     fig_width: 7.2
     fig_height: 5.4
     fig_retina: 2
+bibliography: ksharp.bib
+cls: biomed-central.cls
 vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteIndexEntry{ksharp vignette}
@@ -45,7 +47,7 @@ dbscan.named = function(data, eps) {
 ```{r, echo=FALSE}
 plotClusters <- function(data, clusters=NULL, main="", Rcssclass="sharp") {
 
-  ## when clusters not specified, assume all belong to class "plain"
+  # when clusters not specified, assume all belong to class "plain"
   if (is.null(clusters)) {
     clusters = setNames(rep("plain", nrow(data)), rownames(data))
   }
@@ -73,11 +75,11 @@ plotClusters <- function(data, clusters=NULL, main="", Rcssclass="sharp") {
   plot(xylim, xylim)
   rect(xylim[1], xylim[1], xylim[2], xylim[2])
   
-  ## create cluster names like C0, C1, etc
+  # create cluster names like C0, C1, etc
   cnames = paste0("C", clusters)
   clusters = split(names(clusters), cnames)
 
-  ## add points to the chart
+  # add points to the chart
   for (iname in names(clusters)) {
     idata = data[clusters[[iname]], , drop=FALSE]
     points(idata[,1], idata[,2], Rcssclass=iname)
@@ -95,7 +97,7 @@ emptyplot = function(n) {
 ```
 
 ```{r, echo=FALSE}
-## override table to remove spurious empty line
+# override table to remove spurious empty line
 table = function(x) {
   x = base::table(x)
   width = 5
@@ -117,22 +119,29 @@ table = function(x) {
 
 &nbsp;
 
-Clustering is meant to assign data points to groups, i.e clusters, so that each group is internally coherent and also different from the others. In practice, however, the resulting groups often turn out to be almost merging with one another. One might then wish for greater contrasts. This leads to cluster sharpening, a concept that goes back at least to the 1980s (Tukey) and refers to adjusting an existing clustering to emphasize the unique properties of each group. 
+# Introduction
 
-This vignette first explains cluster sharpening in the introduction. It then outlines some possible algorithms and demonstrates how they differ on a few examples.
+Clustering assigns data points to groups, i.e clusters, so that each group is internally coherent and also different from the others. In practice, however, clusters often turn out to be almost merging with one another. Sharpening in this context refers to increasing contrasts between cluster groups.
+
+The concept of cluster sharpening goes back at least to the 1980s and the works of Tukey [@cleveland1988collected]. Methods that specifically mention cluster sharpening include dendrogram sharpening [@stanberry2003cluster] and variations on the k-means algorithm [@garcia2008general]. Some R packages that produce clusterings and provide controls on the level of sharpening include `tclust` [@tclust] and `trimcluster` [@trimcluster]. 
+
+In contrast to methods that produce *de-novo* clusterings with specific sharpness properties, the `ksharp` package aims to adjust *existing* clusterings. The package provides a general interface for this purpose along with several distinct algorithms. All are compatible with clusterings produced using the `stats` package, the `cluster` package [@cluster], the `dbscan` package [@dbscan], as well as custom-made assignments.
+
+This vignette first explains cluster sharpening in the methods section. It then demonstrates the algorithms implemented in the package on a range of examples. Throughout, most code is hidden for readability, but is available in the package source. 
 
 
 
 
-# Introduction with example
+# Methods
 
-Consider the toy dataset below. (Here and throughout the vignette, most code is hidden for readability. Core commands are explained below; the rest are available in the [package source](https://github.com/tkonopka/ksharp).) 
+## Toy example
+
+As a form of motivation and illustration, let's look at the toy dataset below.
 
 ```{r, echo=FALSE}
 K1 = kdata.1
 km1 = kmeans(K1, 2)
 ```
-
 
 ```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
 par(mfrow=c(1,4))
@@ -141,9 +150,9 @@ plotClusters(K1, km1$cluster, main="kmeans (k=2)", Rcssclass="unsharp")
 emptyplot(2)
 ```
 
-The dataset consists of two blobs (above, left). A k-means clustering using two colors partitions the points rather well (above, right). However, the boundary between the two groups is vertical and appears to be well-defined, and this does not seem right when the data appear to come from two symmetrical distributions. The straight line is the best partition between the overlapping groups, but the ambiguity in cluster assignment is not apparent in the end result. It is reasonable to guess that each cluster is contaminated by points from the other cluster.
+The raw data shows two circular blobs that are nearby on the plane (above, left). k-means clustering using two colors partitions the points into groups that appear symmetrical, except on the boundary between the groups (above, right). The distorted shapes suggest that the true groups may be in fact overlapping and, therefore, certain items assigned to one group may should belong to the other.
 
-Let's identify and mark the ambiguous points using sharpening.
+The ambiguous points can be marked by demanding increasing levels of sharpness.
 
 ```{r, echo=FALSE, fig.width=7.2, fig.height=1.8}
 sharp1 = ksharp(km1, data=K1)
@@ -154,25 +163,29 @@ for (t in thresholds) {
 }
 ```
 
-With a mild level of sharpening, a few of the points on the boundary fade into a third group - let's call it noise - displayed in gray. Increasing the sharpening threshold makes the noise group grow. At the cost of discarding some of the data, the leftover groups become more distinct and well-separated. 
+With a mild level of sharpening (above, left), a few of the points on the boundary fade into a third group, displayed in gray. Increasing the sharpening threshold makes this group larger. At the cost of discarding some of the data, the leftover groups become more distinct and well-separated (above, right). 
 
-We can achieve this effect using the `ksharp` package as follows. To begin, we cluster the dataset `kdata.1` using k-means.
+
+## Using `ksharp`
+
+To achieve this effect using the `ksharp` package, first we cluster the dataset `kdata.1` using k-means.
 
 ```{r}
-km1 = kmeans(kdata.1, 2)
+library(ksharp)
+km1 = kmeans(kdata.1, centers=2)
 table(km1$cluster)
 ```
 
-As we saw above, the algorithm partitions the data into groups of roughly equal size. Next, we sharpen the clustering using command `ksharp`.
+The algorithm partitions the data into groups of roughly equal size. Next, we sharpen the clustering using command `ksharp`.
 
 ```{r}
 ks1 = ksharp(km1, threshold=0.05, data=kdata.1)
 table(ks1$cluster)
 ```
 
-With this threshold, the sharpening creates an additional small group with cluster index `0` containing 5\% of the data. 
+The sharpening function creates an additional small group with cluster index `0` containing 5\% of the data. 
 
-On the first run, the sharpening command requires access to the original data. But on subsequent runs, this is no longer required. We can adjust the size of the noise group by varying the sharpness threshold. 
+On the first run, the sharpening command requires access to the original data and can take a moment to compute various sharpening-related metrics. But once computed, it is straightforward to re-use those metrics to adjust the level of sharpening. We can adjust the size of the left-out group by varying the sharpness threshold. 
 
 ```{r}
 ks1.10 = ksharp(ks1, threshold=0.1)
@@ -181,22 +194,21 @@ ks1.20 = ksharp(ks1, threshold=0.2)
 table(ks1.20$cluster)
 ```
 
-Calculations on these subsequent run much quicker. By increasing the threshold, we delegate a larger proportion of the points to the noise group with index `0`, reproducing the effect in the figure.
+By increasing the threshold, we delegate a larger proportion of the points to the group with index `0`, reproducing the effect in the figure above.
 
 
 
+## Sharpening heuristics
 
-# Methods
+Just like there are many ways to define a clustering algorithm, there are also many conceivable procedures to mask out ambiguous points in a clustering. `ksharp` implements three, which can be toggled via an argument called `method`.
 
-Just like there are many ways to define a clustering algorithm, there are also many conceivable procedures to mask out ambiguous points in a clustering. Package `ksharp` implements three.
+ - `method="silhouette"` is based on silhouette widths. A silhouette width is defined for each data point as the ratio of two distances. In the numerator, there is the average distance to all other points in its cluster. The denominator is the average distance to elements in the nearest adjacent cluster. Sharpening is achieved via a threshold on these silhouette widths.
 
- - `method="silhouette"` is based on silhouette widths, defined for each data point as the ratio of two distances. In the numerator, there is average distance to all other points in its cluster. The denominator is the average distance to elements in the nearest adjacent cluster. Sharpening can be achieved through a threshold on the silhouette width.
-
- - `method="medoids"` is based on a ratio of distances to cluster centers. This is similar to the method using silhouette widths, but only requires computation of distances to representatives of each cluster. Sharpening can be achieved through a threshold on the ratio of distances to the self-cluster and the nearest adjacent cluster.
+ - `method="medoids"` is based on ratios of distances to cluster centers. This is similar to the method using silhouette widths, but only requires computation of distances to representatives of each cluster. Sharpening can be achieved through a threshold on the ratio of distances to the self-cluster and the nearest adjacent cluster.
 
  - `method="neighbors"` is based on local neighborhoods. A neighborhood is defined for each point as the set of `n` of its nearest neighbors. A sharp neighborhood is one where all the neighbors belong to the same cluster. Sharpening can be achieved through a threshold on the size of the neighborhood.
 
-Let's now investigate how these methods differ in a range of situations. 
+Each of these methods has characterisitic properties that may be suitable/unsuitable for certain datasets.
 
 
 
@@ -205,7 +217,7 @@ Let's now investigate how these methods differ in a range of situations.
 
 ## Two overlapping clusters
 
-Before moving to more sophisticated examples, let's revisit the dataset with the two overlapping groups.
+Before moving to more intricate examples, let's revisit the dataset with the two overlapping blobs using the three sharpening methods.
 
 ```{r, echo=FALSE}
 par(mfrow=c(3,4))
@@ -224,7 +236,7 @@ Each row represents output from a sharpening method. From left to right, increas
 
 ## Non-overlapping, non-spherical clusters
 
-Let's now consider another dataset with two point groups, `kdata.2`.
+Another dataset with two groups is `kdata.2`.
 
 ```{r, echo=FALSE}
 K2 = kdata.2
@@ -242,9 +254,9 @@ plotClusters(K2, db2$cluster, main="dbscan, k=2", Rcssclass="unsharp")
 emptyplot(1)
 ```
 
-Points are here arranged in non-circular shapes (above, left) and this can confuse the k-means algorithm (above, center). To avoid that, we can create the initial clustering using a density-based algorithm instead, `dbscan` (above, right).
+Here, points are arranged in non-circular shapes (above, left) and this can confuse the k-means algorithm (above, center). To avoid that, we can create the initial clustering using a density-based algorithm instead, `dbscan` (above, right).
 
-Sharpening of a `dbscan` clustering proceeds in the same way as before. (A caveat is that `dbscan` provides cluster assignments in un-named lists. `ksharp` requires a named list, so the initial clustering must be adjusted manually before sharpening.)
+Sharpening of a `dbscan` clustering proceeds in the same way as before. (A caveat is that `dbscan` provides cluster assignments in unnamed lists. `ksharp` requires a named list, so the initial clustering must be adjusted manually before sharpening.)
 
 ```{r, echo=FALSE}
 par(mfrow=c(3,4))
@@ -255,7 +267,7 @@ for (m in methods) {
 }
 ```
 
-Here, the first two methods (top and middle) tend to remove points from the left and right sides of the rectangles. The neighbor-based method (bottom) instead subtracts from the upper and lower sides. 
+The silhouette and medoid methods (top and middle) tend to remove points from the left and right sides of the rectangles. The neighbor-based method (bottom) instead subtracts from the upper and lower sides. 
 
 
 
@@ -273,7 +285,7 @@ plotClusters(K3, db3$cluster, main="dbscan", Rcssclass="unsharp")
 emptyplot(2)
 ```
 
-The result from `dbscan` contains three main groups. It also already assigns some points to a noise group. But we can sharpen the result further.
+The result from `dbscan` contains three main groups. It also already assigns some points to a noise group, which has a cluster index of 0. But we can sharpen the result further.
 
 ```{r, echo=FALSE}
 sharp3 = ksharp(db3, data=K3, method="neighbor")
@@ -292,7 +304,7 @@ An interesting feature that appears here is that the presence of a noise group i
 
 ## Noise points
 
-The last example consists of groups that are well defined, but are surrounded by true noise points, `kdata.4`.
+The last example consists of groups that are well defined, but are surrounded by noise, `kdata.4`.
 
 ```{r, echo=FALSE}
 K4 = kdata.4
@@ -322,29 +334,26 @@ Interestingly, an already-sharp cluster assignment can be produced in this case 
 
 Sharpening is a procedure that adjusts an existing clustering in order to better bring out the distinctions between cluster groups. Package `ksharp` implements a specific form of cluster sharpening called 'sharpening by excision' (Cleveland, 1988). This works by removing some boundary points from a dataset to increase contrast between the remaining groups.
 
-There are several possible algorithms for cluster sharpening. The `ksharp` command delivers three different ones. The object output by function `ksharp` contains details relevant to all of them. This makes it possible to adjust the sharpening level on already-sharpened clusterings very quickly (in time O(N), where N is the number of data points). However, the initial creation of these details requires recalculation and sorting of the distance matrix and can thus be expensive on large datasets). 
-
-Other algorithms for sharpening by excision have been described in the literature. In particular, algorithms can be defined on dendrograms (eg. Stanberry, Nandy, Cordes). 
+There are several possible algorithms for cluster sharpening. The `ksharp` command delivers three different ones. The object output by function `ksharp` contains details relevant to all of them. This makes it possible to adjust the sharpening level of already-sharpened clusterings very quickly (in time O(N), where N is the number of data points). However, the initial creation of these details requires recalculation and sorting of the distance matrix and can thus be expensive on large datasets. Speeding up these calculations using alternative implementations is a possible avenue for development.
 
 
 
 
 # References
 
-Cleveland, William S.. "The Collected Works of John W. Tukey: Graphics 1965-1985, Volume 5." CRC Press, 1988.
+<div id="refs"></div>
 
-Stanberry, Larissa, Rajesh Nandy, and Dietmar Cordes. "Cluster analysis of fMRI data using dendrogram sharpening." Human brain mapping 20.4 (2003): 201-219.
 
 
 # Appendix
 
-## API & Implementation
+## Implementation notes
 
 Function `ksharp` is the main API function of the package. This function is designed to be compatible with clusterings produced by k-means and by functions from the `cluster` package, e.g. `pam`. It is also compatible with output from `dbscan` after an adjustment of that clustering output to include data-point names.
 
 The function can also sharpen self-made clusterings, as long as they are prepared as a list with a component `cluster` consisting of a named vector associating each data point to a numeric cluster id.
 
-Besides the main sharpening function, the package also exports some helper functions to compute auxiliary information such as silhouette widths. These implementations differ slightly from existing ones from package `cluster`; see the documentation, e.g. `help(silinfo)` for details.
+Beside the `ksharp` function, the package also exports other functions tat compute auxiliary information such as silhouette widths. These implementations differ slightly from existing ones from package `cluster`; see the documentation, e.g. `help(silinfo)` for details.
 
 
 

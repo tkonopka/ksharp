@@ -1,26 +1,34 @@
-## file from package ksharp.R
-##
-## Calculation of cluster centers and distances
-##
+# package ksharp.R
+# compute measures of sharpness based on distances to medoids/centroids
 
 
-
-
-##' compute info on distances to medoids/centroids
-##'
-##' Analogous in structure to silinfo and neiinfo, it computes
-##' a "widths" marix assessing how well each data point belongs
-##' to its cluster. This measure is here the ratio of the distance
-##' from the point to the nearest cluster center to the distance
-##' from the point to its own cluster center.
-##'
-##' @param data matrix
-##' @param cluster named vector
-##' @param silwidths matrix with silhouette widths
-##'
-##' @return list with component widths
-##'
-##' @export
+#' compute info on distances to medoids/centroids
+#'
+#' Analogous in structure to silinfo and neiinfo, it computes
+#' a "widths" matrix assessing how well each data point belongs
+#' to its cluster. Here, this measure is the ratio of two distances:
+#' in the numerator, the distance from the point to the nearest cluster center,
+#' and in the denominator, from the point to its own cluster center.
+#'
+#' @export
+#' @param cluster named vector
+#' @param data matrix with raw data 
+#' @param silwidths matrix with silhouette widths
+#'
+#' @return list with component widths
+#'
+#' @examples
+#'
+#' # construct a manual clustering of the iris dataset
+#' iris.data = as.matrix(iris[, 1:4])
+#' rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
+#' iris.dist = dist(iris.data)
+#' iris.clusters = setNames(as.integer(iris$Species), rownames(iris.data))
+#'
+#' # compute sharpnessvalues based on medoids
+#' iris.silinfo = silinfo(iris.clusters, iris.dist)
+#' medinfo(iris.clusters, iris.data, iris.silinfo$widths)
+#' 
 medinfo = function(cluster, data, silwidths) {
 
   datacenters = medoids(data, silwidths)
@@ -29,19 +37,19 @@ medinfo = function(cluster, data, silwidths) {
   widths = silwidths
   colnames(widths)[colnames(widths)=="sil_width"] = "med_ratio"
   
-  ## for each item in dataset, identify ratio:
-  ## (nearest distance to other cluster)/(distance to self cluster)
-  ratios = sapply(rownames(widths), function(y) {
+  # for each item in dataset, identify ratio:
+  # (nearest distance to other cluster)/(distance to self cluster)
+  ratios = vapply(rownames(widths), function(y) {
     d.centers = d.all.centers[y, ]
-    ## fetch original cluster id
+    # fetch original cluster id
     yraw = as.character(cluster[y])
-    ## fetch distances to its own cluster
+    # fetch distances to its own cluster
     d.self = d.centers[yraw]
-    ## fetch closest distance to another cluster
+    # fetch closest distance to another cluster
     d.centers[yraw] = NA
-    d.other = min(d.centers, na.rm=T)
+    d.other = min(d.centers, na.rm=TRUE)
     d.other/d.self   
-  })
+  }, numeric(1))
   names(ratios) = names(cluster)
   widths[, "med_ratio"] = ratios
   class(widths) = NULL
@@ -53,22 +61,20 @@ medinfo = function(cluster, data, silwidths) {
 }
 
 
-
-
-##' get coordinates of cluster medoids
-##'
-##' (This is an internal functions)
-##'
-##' @param data matrix
-##' @param silwidths matrix with silhouette widths
-##'
-##' @return matrix, each row has an element of data that represents its cluster
+#' get coordinates of cluster medoids
+#'
+#' @keywords internal
+#' @noRd
+#' @param data matrix
+#' @param silwidths matrix with silhouette widths
+#'
+#' @return matrix, each row has an element of data that represents its cluster
 medoids = function(data, silwidths) {
-  ## obtain ids of elements with maximal silhouette width
+  # obtain ids of elements with maximal silhouette width
   silsplit = split(silwidths[, "sil_width"], silwidths[, "cluster"])
-  silmedoid = sapply(silsplit, function(x) {
+  silmedoid = vapply(silsplit, function(x) {
     names(which.max(x))
-  })
+  }, character(1))
   result = data[silmedoid,]
   rownames(result) = names(silmedoid)
   result
@@ -77,16 +83,16 @@ medoids = function(data, silwidths) {
 
 
 
-##' compute a matrix of distances from data elements to fixed points
-##' (e.g. cluster centers)
-##'
-##' (This is an internal function only)
-##'
-##' @param data matrix with raw data
-##' @param centers matrix with fewer rows than data each row meant to
-##' capture center of a cluster
-##'
-##' @return matrix
+#' compute a matrix of distances from data elements to fixed points
+#' (e.g. cluster centers)
+#'
+#' @keywords internal
+#' @noRd
+#' @param data matrix with raw data
+#' @param centers matrix with fewer rows than data each row meant to
+#' capture center of a cluster
+#'
+#' @return matrix
 dist2centers = function(data, centers) {
 
   datat = t(data)

@@ -9,7 +9,7 @@ medinfo(cluster, data, silwidths)
 \arguments{
 \item{cluster}{named vector}
 
-\item{data}{matrix}
+\item{data}{matrix with raw data}
 
 \item{silwidths}{matrix with silhouette widths}
 }
@@ -18,8 +18,21 @@ list with component widths
 }
 \description{
 Analogous in structure to silinfo and neiinfo, it computes
-a "widths" marix assessing how well each data point belongs
-to its cluster. This measure is here the ratio of the distance
-from the point to the nearest cluster center to the distance
-from the point to its own cluster center.
+a "widths" matrix assessing how well each data point belongs
+to its cluster. Here, this measure is the ratio of two distances:
+in the numerator, the distance from the point to the nearest cluster center,
+and in the denominator, from the point to its own cluster center.
+}
+\examples{
+
+# construct a manual clustering of the iris dataset
+iris.data = as.matrix(iris[, 1:4])
+rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
+iris.dist = dist(iris.data)
+iris.clusters = setNames(as.integer(iris$Species), rownames(iris.data))
+
+# compute sharpnessvalues based on medoids
+iris.silinfo = silinfo(iris.clusters, iris.dist)
+medinfo(iris.clusters, iris.data, iris.silinfo$widths)
+
 }

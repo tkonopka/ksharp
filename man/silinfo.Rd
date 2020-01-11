@@ -15,10 +15,11 @@ silinfo(cluster, dist)
 list, analogous to object within output from cluster::pam
 }
 \description{
-This function provides information on how well each data point belongs to its
-cluster. For each query point, the function considers the average distance
-to other members of the same cluster and the average distance to members
-of another, nearest, cluster. The widths are defined as the
+This function provides information on how well each data point
+belongs to its cluster. For each query point, the function considers
+the average distance to other members of the same cluster and the
+average distance to members of another, nearest, cluster. The widths
+are defined as the
 }
 \details{
 The function signature is very similar to cluster::silhouette but
@@ -26,4 +27,16 @@ the implementation has important differences. This implementation
 requires both the dist object and and cluster vector must have names.
 This prevents accidental assignment of silhouette widths to the wrong
 elements.
+}
+\examples{
+
+# construct a manual clustering of the iris dataset
+iris.data = iris[, 1:4]
+rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
+iris.dist = dist(iris.data)
+iris.clusters = setNames(as.integer(iris$Species), rownames(iris.data))
+
+# compute sharpness values based on silhouette widths
+silinfo(iris.clusters, iris.dist)
+
 }

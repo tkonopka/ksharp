@@ -13,8 +13,9 @@ ksharp(
 )
 }
 \arguments{
-\item{x}{clustering object; several types of inputs are acceptable, including
-objects of class kmeans, pam, and self-made lists with a component "cluster".}
+\item{x}{clustering object; several types of inputs are acceptable,
+including objects of class kmeans, pam, and self-made lists with a
+component "cluster".}
 
 \item{threshold}{numeric; the fraction of points to place in noise group}
 
@@ -27,12 +28,32 @@ when sharpening for the first time or if data is not present within x.}
 When non-NULL, this value overrides value in argument 'threshold'}
 }
 \description{
-Each data point in a clustering is assigned to a cluster, but some data points
-may lie in ambiguous zones between two or more clusters. Cluster sharpening
-assigns these border points into a separate noise group, thereby creating
-more stark distinctions between the groupings that are left.
+Each data point in a clustering is assigned to a cluster, but some data
+points may lie in ambiguous zones between two or more clusters, or far
+from other points. Cluster sharpening assigns these border points into
+a separate noise group, thereby creating more stark distinctions between
+groups.
 }
 \details{
-Noise points are assigned to a group with cluster index 0. This is analogous
-behavior to output produced by dbscan.
+Noise points are assigned to a group with cluster index 0. This is
+analogous behavior to output produced by dbscan.
+}
+\examples{
+
+# prepare iris dataset for analysis
+iris.data = as.matrix(iris[, 1:4])
+rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
+
+# cluster the dataset into three groups
+iris.clustered = kmeans(iris.data, centers=3)
+table(iris.clustered$cluster)
+
+# sharpen the clustering by excluding 10\% of the data points
+iris.sharp = ksharp(iris.clustered, threshold=0.1, data=iris.data)
+table(iris.sharp$cluster)
+
+# visualize cluster assignments
+iris.pca = prcomp(iris.data)$x[,1:2]
+plot(iris.pca, col=iris$Species, pch=ifelse(iris.sharp$cluster==0, 1, 19))
+
 }

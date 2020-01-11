@@ -1,37 +1,48 @@
-## file from package ksharp
-##
-## Definition of main package function
-##
+# package ksharp
+#
+# Thanks to @ashipunov for examples
 
 
-# package imports
-#' @import utils
-#' @import stats
-NULL
-
-
-
-
-##' sharpen a clustering
-##'
-##' Each data point in a clustering is assigned to a cluster, but some data points
-##' may lie in ambiguous zones between two or more clusters. Cluster sharpening
-##' assigns these border points into a separate noise group, thereby creating
-##' more stark distinctions between the groupings that are left.
-##'
-##' Noise points are assigned to a group with cluster index 0. This is analogous
-##' behavior to output produced by dbscan.
-##'
-##' @param x clustering object; several types of inputs are acceptable, including
-##' objects of class kmeans, pam, and self-made lists with a component "cluster".
-##' @param threshold numeric; the fraction of points to place in noise group
-##' @param data matrix, raw data corresponding to clustering x; must be present
-##' when sharpening for the first time or if data is not present within x.
-##' @param method character, determines method used for sharpening
-##' @param threshold.abs numeric; absolute-value of threshold for sharpening.
-##' When non-NULL, this value overrides value in argument 'threshold'
-##'
-##' @export
+#' sharpen a clustering
+#'
+#' Each data point in a clustering is assigned to a cluster, but some data
+#' points may lie in ambiguous zones between two or more clusters, or far
+#' from other points. Cluster sharpening assigns these border points into
+#' a separate noise group, thereby creating more stark distinctions between
+#' groups.
+#'
+#' Noise points are assigned to a group with cluster index 0. This is
+#' analogous behavior to output produced by dbscan.
+#'
+#' @export
+#' @param x clustering object; several types of inputs are acceptable,
+#' including objects of class kmeans, pam, and self-made lists with a
+#' component "cluster".
+#' @param threshold numeric; the fraction of points to place in noise group
+#' @param data matrix, raw data corresponding to clustering x; must be present
+#' when sharpening for the first time or if data is not present within x.
+#' @param method character, determines method used for sharpening
+#' @param threshold.abs numeric; absolute-value of threshold for sharpening.
+#' When non-NULL, this value overrides value in argument 'threshold'
+#'
+#' @examples
+#'
+#' # prepare iris dataset for analysis
+#' iris.data = as.matrix(iris[, 1:4])
+#' rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
+#'
+#' # cluster the dataset into three groups
+#' iris.clustered = kmeans(iris.data, centers=3)
+#' table(iris.clustered$cluster)
+#' 
+#' # sharpen the clustering by excluding 10% of the data points
+#' iris.sharp = ksharp(iris.clustered, threshold=0.1, data=iris.data)
+#' table(iris.sharp$cluster)
+#' 
+#' # visualize cluster assignments
+#' iris.pca = prcomp(iris.data)$x[,1:2]
+#' plot(iris.pca, col=iris$Species, pch=ifelse(iris.sharp$cluster==0, 1, 19))
+#' 
 ksharp = function(x, threshold=0.1, data=NULL,
                   method=c("silhouette", "neighbor", "medoid"),
                   threshold.abs=NULL) {
@@ -40,7 +51,7 @@ ksharp = function(x, threshold=0.1, data=NULL,
   threshold = check.numeric(threshold)
   
   if (!"ksharp" %in% class(x)) {
-    ## perhaps infer data when present in x
+    # perhaps use data that is carried within x
     if (is.null(data) & "data" %in% names(x)) {
       data = x$data
     }     
@@ -49,13 +60,13 @@ ksharp = function(x, threshold=0.1, data=NULL,
     } else if ("clustering" %in% names(x)) {
       xclusters = x$clustering
     } else {    
-      stop("object must be compatible with kmeans or pam\n")
+      stop("object must be compatible with kmeans or pam")
     }
     x = ksharp.prep(x, data, xclusters)
     class(x) = c("ksharp", class(x))
   } 
 
-  ## retrieve ids of noise points from an "info" object
+  # retrieve ids of noise points from an "info" object
   noise.ids = function(widths) {
     if (is.null(threshold.abs)) {
       threshold.abs = stats::quantile(widths[,3], p=threshold)
@@ -64,7 +75,7 @@ ksharp = function(x, threshold=0.1, data=NULL,
     rownames(widths)[noise]
   }
   
-  ## update cluster assignments
+  # update cluster assignments
   x$cluster = x$cluster.original
   if (method=="medoid") {
     x$cluster[noise.ids(x$medinfo$widths)] = 0
@@ -78,34 +89,33 @@ ksharp = function(x, threshold=0.1, data=NULL,
 }
 
 
-
-
-##' augment a kmeans object with sharpness values
-##'
-##' (This is an internal function)
-##'
-##' @param x object of class kmeans or cluster
-##' @param data matrix with raw data, must match x
-##' @param cluster named vector assigning items in data to clusters;
-##' these clusters are meant to be the raw/original/unsharpened clusters
-##'
-##' @return object based on x, with additional elements
+#' augment a kmeans/clustering object with sharpness values
+#' (silhouette widths, and other measures of sharpness)
+#'
+#' @keywords internal
+#' @noRd
+#' @param x object of class kmeans or cluster
+#' @param data matrix with raw data, must match x
+#' @param cluster named vector assigning items in data to clusters;
+#' these clusters are meant to be the raw/original/unsharpened clusters
+#'
+#' @return object based on x, with additional elements
 ksharp.prep = function(x, data, cluster) {
 
   if (is.null(data)) {
-    stop("data cannot be null when running ksharp for first time.")
+    stopCF("data cannot be null when running ksharp for first time")
   }
   if (is.null(rownames(data))) {
-    stop("data rows must have names\n")
+    stopCF("data rows must have names")
   }
   if (is.null(names(cluster))) {
-    stop("cluster definitions must have names\n")
+    stopCF("cluster definitions must have names")
   }
   if (!identical(names(cluster), rownames(data))) {
-    stop("rownames in data objects must match items in cluster object\n")
+    stopCF("rownames in data objects must match items in cluster object")
   }
 
-  ## compute distance matrix for data
+  # compute distance matrix for data
   getdist = function() {
     if (is.null(datadist)) {
       return(stats::dist(data))
@@ -113,7 +123,7 @@ ksharp.prep = function(x, data, cluster) {
     datadist
   }
   
-  ## add elements to x if they don't already exist
+  # add elements to x if they don't already exist
   datadist = NULL
   if (!"cluster.original" %in% names(x)) {
     x$cluster.original = cluster
@@ -123,8 +133,8 @@ ksharp.prep = function(x, data, cluster) {
     x$silinfo = silinfo(cluster, datadist)
   }
   if (is.null(rownames(x$silinfo$widths))) {
-    ## this is a defensive re-compute of silinfo in case existing one
-    ## does not have item names encoded in it
+    # this is a defensive re-compute of silinfo in case existing one
+    # does not have item names encoded in it
     datadist = getdist()
     x$silinfo = silinfo(cluster, datadist)
   }
@@ -138,7 +148,4 @@ ksharp.prep = function(x, data, cluster) {
   
   x
 }
-
-
-
 

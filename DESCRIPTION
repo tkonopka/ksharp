@@ -1,16 +1,18 @@
 Package: ksharp
 Title: Cluster Sharpening
 Version: 0.1.0
-Authors@R: person("Tomasz", "Konopka", email = "t.konopka@qmul.ac.uk", role = c("aut", "cre"))
+Authors@R: person("Tomasz", "Konopka", email = "tokonopka@gmail.com", role = c("aut", "cre"))
 Author: Tomasz Konopka [aut, cre]
-Maintainer: Tomasz Konopka <t.konopka@qmul.ac.uk>
-Description: Clustering assigns data points into clusters, but the resulting groups may be almost indistinct. Cluster sharpening adjusts an existing clustering to create contrast between groups.
+Maintainer: Tomasz Konopka <tokonopka@gmail.com>
+Description: Clustering typically assigns data points into discrete groups, but the resulting clusters may be almost indistinct. Cluster sharpening adjusts an existing clustering to create contrast between groups. This package provides a general interface for cluster sharpening along with several implementations.
 Depends:
     R (>= 3.5.0)
 Imports:
-    stats,
-    utils
+    methods,
+    stats
 License: MIT + file LICENSE
+URL: https://github.com/tkonopka/ksharp
+BugReports: https://github.com/tkonopka/ksharp/issues
 LazyData: true
 Suggests:
     cluster,
