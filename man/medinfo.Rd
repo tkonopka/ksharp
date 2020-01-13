@@ -26,7 +26,7 @@ and in the denominator, from the point to its own cluster center.
 \examples{
 
 # construct a manual clustering of the iris dataset
-iris.data = as.matrix(iris[, 1:4])
+iris.data = iris[, 1:4]
 rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
 iris.dist = dist(iris.data)
 iris.clusters = setNames(as.integer(iris$Species), rownames(iris.data))

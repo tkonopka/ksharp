@@ -65,9 +65,21 @@ test_that("should give error when threshold not in [0,1]", {
 # testing using kmeans input
 
 
+test_that("should accept a numeric data frame", {
+  i4 = iris[1:100, 1:4]
+  rownames(i4) = paste0("I", 1:100)
+  ik = kmeans(i4, 2)
+  iks = ksharp(ik, data=i4)
+  expect_is(iks, "ksharp")
+  expect_is(iks, "kmeans")
+})
+
+
 test_that("should change class and add fields", {
   sharp2 = ksharp(km2, data=K1)
-  expect_equal(class(sharp2), c("ksharp", "kmeans"))
+  expect_is(sharp2, "ksharp")
+  expect_is(sharp2, "kmeans")
+  
 })
 
 

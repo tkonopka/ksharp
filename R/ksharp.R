@@ -28,7 +28,7 @@
 #' @examples
 #'
 #' # prepare iris dataset for analysis
-#' iris.data = as.matrix(iris[, 1:4])
+#' iris.data = iris[, 1:4]
 #' rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
 #'
 #' # cluster the dataset into three groups

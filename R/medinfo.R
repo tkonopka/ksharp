@@ -20,7 +20,7 @@
 #' @examples
 #'
 #' # construct a manual clustering of the iris dataset
-#' iris.data = as.matrix(iris[, 1:4])
+#' iris.data = iris[, 1:4]
 #' rownames(iris.data) = paste0("iris_", seq_len(nrow(iris.data)))
 #' iris.dist = dist(iris.data)
 #' iris.clusters = setNames(as.integer(iris$Species), rownames(iris.data))
@@ -98,14 +98,14 @@ dist2centers = function(data, centers) {
   datat = t(data)
   k = nrow(centers)
   
-  ## build matrix with distances from items to cluster centers
+  # build matrix with distances from items to cluster centers
   result = matrix(0, ncol=k, nrow=nrow(data))
   for (i in seq(k)) {
-    temp = datat-centers[i,]
-    result[,i] = sqrt(apply(temp*temp, 2, sum))
+    temp = datat-as.numeric(centers[i,])
+    result[,i] = sqrt(colSums(temp*temp))
   }
   
-  ## format result with samples names and cluster ids
+  # format result with samples names and cluster ids
   rownames(result) = rownames(data)
   colnames(result) = rownames(centers)
   result
