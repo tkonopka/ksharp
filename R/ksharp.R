@@ -50,7 +50,7 @@ ksharp = function(x, threshold=0.1, data=NULL,
   method = match.arg(method)
   threshold = check.numeric(threshold)
   
-  if (!"ksharp" %in% class(x)) {
+  if (!is(x, "ksharp")) {
     # perhaps use data that is carried within x
     if (is.null(data) & "data" %in% names(x)) {
       data = x$data
@@ -60,12 +60,12 @@ ksharp = function(x, threshold=0.1, data=NULL,
     } else if ("clustering" %in% names(x)) {
       xclusters = x$clustering
     } else {    
-      stop("object must be compatible with kmeans or pam")
+      stop("object must have component $cluster or $clustering")
     }
     x = ksharp.prep(x, data, xclusters)
     class(x) = c("ksharp", class(x))
   } 
-
+  
   # retrieve ids of noise points from an "info" object
   noise.ids = function(widths) {
     if (is.null(threshold.abs)) {

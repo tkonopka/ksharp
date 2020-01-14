@@ -21,8 +21,8 @@ selfmade = list(cluster = setNames(rep(c(1,2), each=30), rownames(K1)))
 
 
 test_that("should give error on non-kmeans data", {
-  expect_error(ksharp(K1), "kmeans")
-  expect_error(ksharp(1:10), "kmeans")
+  expect_error(ksharp(K1), "must have component")
+  expect_error(ksharp(1:10), "must have component")
 })
 
 
