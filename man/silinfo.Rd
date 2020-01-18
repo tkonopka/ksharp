@@ -12,7 +12,10 @@ silinfo(cluster, dist)
 \item{dist}{distance object or matrix}
 }
 \value{
-list, analogous to object within output from cluster::pam
+list, analogous to object within output from cluster::pam.
+In particular, the list has a component widths. The widths object is
+matrix with one row per data item, with column sil_width holding the
+silhouette width.
 }
 \description{
 This function provides information on how well each data point

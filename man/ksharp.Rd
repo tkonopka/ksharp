@@ -27,6 +27,15 @@ when sharpening for the first time or if data is not present within x.}
 \item{threshold.abs}{numeric; absolute-value of threshold for sharpening.
 When non-NULL, this value overrides value in argument 'threshold'}
 }
+\value{
+clustering object based on input x, with adjusted cluster
+assignments and additional list components with sharpness measures.
+Cluster assignments are placed in $cluster and excised data points
+are given a cluster index of 0. Original cluster assignments are
+saved in $cluster.original. Sharpness measures are stored in
+components $silinfo, $medinfo, and $neiinfo, although these details
+may change in future versions of the package.
+}
 \description{
 Each data point in a clustering is assigned to a cluster, but some data
 points may lie in ambiguous zones between two or more clusters, or far

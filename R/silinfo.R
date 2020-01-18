@@ -20,7 +20,10 @@
 #' @param cluster vector with assignments of data elements to clusters
 #' @param dist distance object or matrix
 #' 
-#' @return list, analogous to object within output from cluster::pam
+#' @return list, analogous to object within output from cluster::pam.
+#' In particular, the list has a component widths. The widths object is
+#' matrix with one row per data item, with column sil_width holding the
+#' silhouette width. 
 #'
 #' @examples
 #'

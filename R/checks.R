@@ -9,6 +9,7 @@
 #' @noRd
 #' @param ... character vector
 #'
+#' @return nothing, always ends with a stop()
 stopCF = function(...) {
   x = paste0(paste(..., collapse=" "), "\n")
   stop(x, call.=FALSE)

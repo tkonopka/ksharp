@@ -25,6 +25,14 @@
 #' @param threshold.abs numeric; absolute-value of threshold for sharpening.
 #' When non-NULL, this value overrides value in argument 'threshold'
 #'
+#' @return clustering object based on input x, with adjusted cluster
+#' assignments and additional list components with sharpness measures.
+#' Cluster assignments are placed in $cluster and excised data points
+#' are given a cluster index of 0. Original cluster assignments are
+#' saved in $cluster.original. Sharpness measures are stored in
+#' components $silinfo, $medinfo, and $neiinfo, although these details
+#' may change in future versions of the package.
+#' 
 #' @examples
 #'
 #' # prepare iris dataset for analysis
@@ -99,7 +107,8 @@ ksharp = function(x, threshold=0.1, data=NULL,
 #' @param cluster named vector assigning items in data to clusters;
 #' these clusters are meant to be the raw/original/unsharpened clusters
 #'
-#' @return object based on x, with additional elements
+#' @return object based on x, with additional elements holding
+#' sharpness measures.
 ksharp.prep = function(x, data, cluster) {
 
   if (is.null(data)) {

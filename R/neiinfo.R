@@ -17,7 +17,9 @@
 #' @param cluster vector with assignments of data elements to clusters
 #' @param dist distance object or matrix
 #'
-#' @return list with component widths
+#' @return list with component widths. The wdiths object is a matrix
+#' with one row per data item, wth column neighborhood holding the
+#' sharpness value.
 #'
 #' @examples
 #'

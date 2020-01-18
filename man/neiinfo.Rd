@@ -12,7 +12,9 @@ neiinfo(cluster, dist)
 \item{dist}{distance object or matrix}
 }
 \value{
-list with component widths
+list with component widths. The wdiths object is a matrix
+with one row per data item, wth column neighborhood holding the
+sharpness value.
 }
 \description{
 This function provides information on how well each data point

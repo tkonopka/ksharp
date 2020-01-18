@@ -1,6 +1,6 @@
 Package: ksharp
 Title: Cluster Sharpening
-Version: 0.1.0
+Version: 0.1.0.1
 Authors@R: person("Tomasz", "Konopka", email = "tokonopka@gmail.com", role = c("aut", "cre"))
 Author: Tomasz Konopka [aut, cre]
 Maintainer: Tomasz Konopka <tokonopka@gmail.com>

@@ -15,7 +15,9 @@
 #' @param data matrix with raw data 
 #' @param silwidths matrix with silhouette widths
 #'
-#' @return list with component widths
+#' @return list with component widths. The widths object is a matrix
+#' with one row per data item, with column med_ratio holding
+#' the sharpness measure.
 #'
 #' @examples
 #'
@@ -92,7 +94,8 @@ medoids = function(data, silwidths) {
 #' @param centers matrix with fewer rows than data each row meant to
 #' capture center of a cluster
 #'
-#' @return matrix
+#' @return matrix, each row captures distances from a data point
+#' to each of the cluster centers
 dist2centers = function(data, centers) {
 
   datat = t(data)

@@ -14,7 +14,9 @@ medinfo(cluster, data, silwidths)
 \item{silwidths}{matrix with silhouette widths}
 }
 \value{
-list with component widths
+list with component widths. The widths object is a matrix
+with one row per data item, with column med_ratio holding
+the sharpness measure.
 }
 \description{
 Analogous in structure to silinfo and neiinfo, it computes
