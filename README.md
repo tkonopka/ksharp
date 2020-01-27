@@ -2,8 +2,9 @@
 
 R package for cluster sharpening
 
-![Status](https://travis-ci.org/tkonopka/ksharp.svg?branch=master)
+[![Status](https://travis-ci.org/tkonopka/ksharp.svg?branch=master)](https://travis-ci.org/tkonopka/ksharp)
 [![codecov](https://codecov.io/gh/tkonopka/ksharp/branch/master/graph/badge.svg)](https://codecov.io/gh/tkonopka/ksharp)
+[![CRAN](https://www.r-pkg.org/badges/version/ksharp)](https://cran.r-project.org/web/packages/ksharp/)
 
 
 &nbsp;
@@ -17,7 +18,13 @@ Package `ksharp` implements a general interface for cluster sharpening along wit
 
 ## Installation
 
-The package can be installed from github through devtools.
+The package can be installed from CRAN.
+
+```{r}
+install.packages("ksharp")
+```
+
+A development versian can be installed from this repository through devtools.
 
 ```{r}
 library(devtools)
