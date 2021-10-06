@@ -1,5 +1,11 @@
 ## ignoring temporary files from emacs/knitr/tex
+.idea
 *~
+
+
+## ignoring files auto-generated during build
+man
+
 
 ## ignoring intermediate/cached vignette data
 vignettes/figure
